@@ -1,0 +1,74 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.revolvingcabinet.dao.InventoryPosMapper">
+
+    <sql id="selectFields">
+        id,
+        inventory_id,
+pos_id,
+vacancyNum,
+box_no1_Status_Flag,
+box_no2_Status_Flag,
+box_no1_location,
+box_no2_location,
+status_flag,
+box1_rfid,
+box_no1,
+pos_id_target_1,
+location_target_1,
+Status_Flag_target_1,
+box_no1_readnum,
+box2_rfid,
+box_no2,
+pos_id_target_2,
+location_target_2,
+Status_Flag_target_2,
+box_no2_readnum,
+message,
+create_time,
+create_user,
+update_time,
+update_user,
+del_flag,
+del_time,
+del_user,
+box_no1_old,
+box_no2_old,
+box_no1_Status_Flag_old,
+box_no2_Status_Flag_old,
+task_id,
+inventory_num
+    </sql>
+
+    <insert id="insertInventoryPosBeforeInventory" parameterType="com.project.revolvingcabinet.entity.InventoryPos">
+        insert into inventory_pos (id, inventory_id, pos_id, status_flag, create_time, create_user)
+            values (#{id}, #{inventoryId}, #{posId}, #{statusFlag}, #{createTime}, #{createUser})
+    </insert>
+
+    <update id="updateInventoryPosBeforeInventory" parameterType="com.project.revolvingcabinet.entity.InventoryPos">
+        update inventory_pos
+        set
+            box_no1_Status_Flag = #{boxNo1StatusFlag},
+            box_no1_location = #{boxNo1Location},
+            status_flag = #{statusFlag},
+            box1_fid = #{box1Rfid},
+            box_no1 = #{boxNo1},
+            pos_id_target_1 = #{posIdTarget1},
+            location_target_1 = #{locationTarget1},
+            Status_Flag_target_1 = #{statusFlagTarget1},
+            update_time = #{updateTime},
+            update_user = #{updateUser},
+            box_no1_old = #{boxNo1Old},
+            box_no1_Status_Flag_old = #{boxNo1StatusFlagOld}
+        where id = #{id}
+    </update>
+
+    <select id="selectInventoryPosByPosId" resultType="com.project.revolvingcabinet.entity.InventoryPos">
+        select
+        <include refid="selectFields">
+        </include>
+        from inventory_pos
+        where pos_id = #{devPosId}
+    </select>
+</mapper>

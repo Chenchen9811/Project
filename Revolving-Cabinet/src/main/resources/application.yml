@@ -1,0 +1,20 @@
+spring:
+  # 数据源配置 DataSourceProperties
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/revolving_cabinet?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: password
+
+# MybatisProperties
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.project.revolvingcabinet.entity  #存放实体类的包名
+  configuration:
+    use-generated-keys: true  #自动生成主键id
+    map-underscore-to-camel-case: true #驼峰命名 将数据库中的header_url 匹配成 自己类中的headerUrl
+
+# 配置sql调试
+logging:
+  level:
+    com.project.revolvingcabinet: debug

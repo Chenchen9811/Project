@@ -1,0 +1,64 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.revolvingcabinet.dao.DevPosMapper">
+
+<sql id="selectFields">
+    id, unit_no, layer_no, column_no, x_pos,y_pos, r_pos,box_no1, box_no2, storage_no,
+    box_status, status_flag, box_no1_Status_Flag, box_no2_Status_Flag, box_rfid1,
+    box_rfid2, create_time, create_user, update_time, update_user, del_flag,
+    del_time, del_user, cabinet_id, cabinet_code
+</sql>
+
+    <sql id="insertFields">
+        id, layer_no, column_no, box_no1, box_status, status_flag,
+        box_no1_status_flag, box_rfid1, create_time, create_user, cabinet_code, cabinet_id
+    </sql>
+
+    <sql id="updateFields">
+        status_flag, update time, update_user, box_no1,
+        box_status, box_no1_status_flag, box_rfid1
+    </sql>
+
+    <insert id="insertDevPos" parameterType="com.project.revolvingcabinet.entity.DevPos">
+        insert into dev_pos (<include refid="insertFields"> </include>)
+        values (#{id}, #{layerNo}, #{columnNo}, #{boxNo1}, #{boxStatus}, #{statusFlag},
+        #{boxNo1StatusFlag}, #{boxRfid1}, #{createTime}, #{createUser}, #{cabinetCode}, #{cabinetId})
+    </insert>
+
+
+    <update id="updateDevPos" parameterType="com.project.revolvingcabinet.entity.DevPos">
+        update dev_pos
+        set
+            status_flag = #{statusFlag},
+            update_time = #{updateTime},
+            update_user = #{updateUser},
+            box_no1 = #{boxNo1},
+            box_status = #{boxStatus},
+            box_no1_status_flag = #{boxNo1StatusFlag},
+            box_rfid1 = #{boxRfid1}
+        where
+            id = #{id}
+    </update>
+
+
+    <select id="selectDevPosByCabinetCode" resultType="com.project.revolvingcabinet.entity.DevPos">
+    select
+    <include refid="selectFields">
+    </include>
+    from dev_pos
+    where cabinet_code = #{cabinetCode}
+    and layer_no = #{layer}
+    and column_no = #{column}
+</select>
+
+<select id="selectPosIdByBoxLocationAndCabinetCode" resultType="com.project.revolvingcabinet.entity.DevPos">
+    select
+    <include refid="selectFields">
+    </include>
+    from dev_pos
+    where cabinetId = #{cabinetId}
+    and layer_no = #{layer}
+    and column_no = #{column}
+</select>
+</mapper>

@@ -1,0 +1,12 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.revolvingcabinet.dao.ArchiveCabinetMapper">
+
+
+    <select id="selectCabinetIdByCabinetCode" resultType="java.lang.Integer">
+        select cabinet_id
+        from archive_cabinet
+        where cabinet_code = #{cabinetCode}
+    </select>
+</mapper>

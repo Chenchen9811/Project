@@ -1,0 +1,41 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.revolvingcabinet.dao.ArchiveBoxMapper">
+    <sql id="selectFields">
+    box_id, box_no, box_name, box_location, box_rfid, box_create_time, out_of_date,
+    content, class_id, status_flag, unit_no, layer_no, column_no, pos_no, cabinet_id,
+    cabinet_code, create_time, create_user, update_time, update_user,
+    del_flag, del_time, del_user
+    </sql>
+
+    <update id="updateArchiveBoxAfterInventory">
+        update archive_box
+        <set>
+            status_flag = #{archiveBoxStatusAfterInventory},
+            <if test="layer != 0 &amp; column != 0">
+                layer_no = #{layer},
+                column_no = #{column},
+            </if>
+            <if test="boxLocation != null">
+                box_location = #{boxLocation},
+            </if>
+        </set>
+        where box_id = #{archiveBoxId}
+    </update>
+
+    <select id="selectArchiveBoxByCabinetCodeAndPosInfo" resultType="com.project.revolvingcabinet.entity.ArchiveBox">
+        select
+        <include refid="selectFields">
+        </include>
+        from archive_box
+        where cabinet_code = #{cabinetCode}
+        and layer_no = #{layer}
+        and column_no = #{column}
+    </select>
+
+    <select id="selectPosIdByBoxLocationAndCabinetCode" resultType="com.project.revolvingcabinet.entity.DevPos">
+        select
+
+    </select>
+</mapper>

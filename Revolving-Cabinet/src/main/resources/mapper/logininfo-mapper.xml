@@ -1,0 +1,36 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.revolvingcabinet.dao.LoginInfoMapper">
+
+    <sql id="updateFields">
+        user_id, login_state, login_time, version
+    </sql>
+
+    <sql id="selectFields">
+        user_id, login_state, login_time, version
+    </sql>
+
+    <insert id="insertLoginInfo" parameterType="com.project.revolvingcabinet.entity.LoginInfo">
+        insert into login_info (<include refid="updateFields"> </include>)
+        values (#{userId}, #{loginState}, #{loginTime}, #{version})
+    </insert>
+
+    <update id="updateLoginInfo" parameterType="com.project.revolvingcabinet.entity.LoginInfo">
+        update login_info
+        set
+            login_state = #{loginState},
+            login_time = #{loginTime},
+            version = #{version}
+        where
+            user_id = #{userId}
+    </update>
+
+    <select id="selectLoginInfoByUserId" resultType="com.project.revolvingcabinet.entity.LoginInfo">
+        select <include refid="selectFields"></include>
+        from login_info
+        where user_id = #{userId}
+    </select>
+
+
+</mapper>
