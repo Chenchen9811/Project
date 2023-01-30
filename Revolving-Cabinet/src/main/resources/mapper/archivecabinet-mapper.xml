@@ -3,10 +3,54 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.project.revolvingcabinet.dao.ArchiveCabinetMapper">
 
+    <sql id="selectField">
+        cabinet_id,
+        cabinet_name,
+cabinet_code,
+cabinet_type,
+agreement,
+ip,
+port,
+virtual_directory,
+webSocket_port,
+dbconnection,
+status_flag,
+remark,
+create_time,
+create_user,
+update_time,
+update_user,
+del_flag,
+del_time,
+del_user,
+layer_total,
+layer_current,
+layer_target,
+led_total,
+rfid_total,
+lightCurtain_flag,
+AI_flag,
+rfid_flag,
+layer_protect_time,
+door_protect_time,
+singleUp_delayed_time,
+singleDown_delayed_time,
+multipleUp_delayed_time,
+multipleDown_delayed_time,
+up_delayed_time,
+down_delayed_time
+    </sql>
 
     <select id="selectCabinetIdByCabinetCode" resultType="java.lang.Integer">
         select cabinet_id
         from archive_cabinet
         where cabinet_code = #{cabinetCode}
+    </select>
+
+    <select id="selectCabinetByAll" resultType="com.project.revolvingcabinet.entity.ArchiveCabinet">
+        select
+        <include refid="selectField">
+        </include>
+        from archive_cabinet
     </select>
 </mapper>

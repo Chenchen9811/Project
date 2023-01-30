@@ -1,12 +1,8 @@
 package com.project.revolvingcabinet;
 
-import com.project.revolvingcabinet.dao.ArchiveBoxMapper;
-import com.project.revolvingcabinet.dao.DevPosMapper;
-import com.project.revolvingcabinet.dao.LoginInfoMapper;
-import com.project.revolvingcabinet.dao.SysUserMapper;
-import com.project.revolvingcabinet.entity.DevPos;
-import com.project.revolvingcabinet.entity.LoginInfo;
-import com.project.revolvingcabinet.entity.SysUser;
+import com.project.revolvingcabinet.config.SchedulerTaskConfig;
+import com.project.revolvingcabinet.dao.*;
+import com.project.revolvingcabinet.entity.*;
 import com.project.revolvingcabinet.modbus.ModbusUtils;
 
 import com.project.revolvingcabinet.utils.CommonUtil;
@@ -23,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 
@@ -41,6 +38,16 @@ public class RevolvingCabinetApplicationTests implements RevolvingCabinetConstan
 
     @Resource
     private ArchiveBoxMapper archiveBoxMapper;
+
+    @Resource
+    private SchedulerTaskConfig schedulerTaskConfig;
+
+    @Resource
+    private CabinetDataMonitorMapper cabinetDataMonitorMapper;
+
+    @Resource
+    private InventoryLayerMapper inventoryLayerMapper;
+
     @Test
     public void contextLoads() throws ModbusTransportException, ModbusInitException, ErrorResponseException {
         ModbusMaster master = ModbusUtils.getSerialPortRtuMaster("COM1", 115200, 8, 1, 0);
@@ -117,6 +124,42 @@ public class RevolvingCabinetApplicationTests implements RevolvingCabinetConstan
     public void testArchiveBoxMapper() {
         //int i = archiveBoxMapper.updateArchiveBoxAfterInventory(ARCHIVE_BOX_STATUS_IN_CABINET, 637967629332207784L, 1, 1, 1 + "-" + 1);
         //System.out.println(i);
+
+    }
+
+    @Test
+    public void testIntToBigDecimal() {
+        System.out.println(schedulerTaskConfig.intToBigDecimal(3450));
+    }
+
+    @Test
+    public void testCabinetDataMonitor() {
+        CabinetDataMonitor cabinetDataMonitor = new CabinetDataMonitor();
+        cabinetDataMonitor.setId(CommonUtil.generateId());
+        cabinetDataMonitor.setTemperature(new BigDecimal("34.50"));
+        cabinetDataMonitor.setHumidity(new BigDecimal("52.20"));
+        cabinetDataMonitor.setPlcSignal(1);
+        cabinetDataMonitor.setRfidSignal(1);
+        cabinetDataMonitor.setLightCurtainStatus(1);
+        cabinetDataMonitor.setCreateTime(new Timestamp(System.currentTimeMillis()));
+        cabinetDataMonitorMapper.insertMonitorData(cabinetDataMonitor);
+    }
+
+
+    @Test
+    public void testInventoryLayerMapper() {
+        InventoryLayer inventoryLayer = new InventoryLayer();
+        inventoryLayer.setId(638106079519760000L);
+//        inventoryLayer.setInventoryId(11111232312321L);
+//        inventoryLayer.setStartLayerNo(2);
+//        inventoryLayer.setCreateUser(4211312L);
+//        inventoryLayer.setCreateTime(new Timestamp(System.currentTimeMillis()));
+        inventoryLayer.setVacancyNum(2);
+        inventoryLayer.setEndLayerNo(5);
+        inventoryLayer.setStatusFlag(3);
+        inventoryLayer.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+        inventoryLayer.setUpdateUser(4211312L);
+        System.out.println(inventoryLayerMapper.updateInventoryLayerInfo(inventoryLayer));
     }
 
 }

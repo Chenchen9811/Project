@@ -4,9 +4,7 @@ import com.project.revolvingcabinet.common.CommonResult;
 import com.project.revolvingcabinet.common.Messages;
 import com.project.revolvingcabinet.controller.UserController;
 import com.project.revolvingcabinet.dao.DevPosMapper;
-import com.project.revolvingcabinet.entity.ArchiveBox;
-import com.project.revolvingcabinet.entity.DevPos;
-import com.project.revolvingcabinet.entity.InventoryPos;
+import com.project.revolvingcabinet.entity.*;
 import com.project.revolvingcabinet.modbus.ModBusConstants;
 import com.project.revolvingcabinet.modbus.ModbusUtils;
 import com.project.revolvingcabinet.service.*;
@@ -53,6 +51,8 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
     private InventoryLayerService inventoryLayerService;
 
 
+
+
     @Override
     public CommonResult inventory() throws ModbusTransportException{
         // 连接串口
@@ -76,6 +76,8 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
         }
         // 生成此次盘库信息的id
         Long inventoryId = CommonUtil.generateId();
+        // 获取档案柜信息
+        ArchiveCabinet archiveCabinet = archiveCabinetService.getArchiveCabinet();
 
         // 获取当前层和最大RFID数量成功
         if (curLayer != Integer.MIN_VALUE && maxRfidNums != Integer.MIN_VALUE && totalLayers != Integer.MIN_VALUE) {
@@ -98,11 +100,13 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
                 e.printStackTrace();
             }
 
-            // 初始化当前层的层盘点信息
-            // inventoryLayerService
+            // 初始化本次盘库的层盘点信息
+            int startLayer = curLayer;
+            InventoryLayer inventoryLayer = inventoryLayerService.initInventoryLayerInfo(inventoryId, startLayer, INVENTORY_STATUS_LAYER_NOT_INVENTORY);
+            // 初始化空位数
+            int vacancyNum = 0;
             while (count < totalLayers) {
                 // 盘点当前层
-
                 for (int curColumn = 1; curColumn <= maxRfidNums; curColumn ++) {
                     // 获取当前列的RFID信息
                     short[] results = new short[0];
@@ -112,15 +116,15 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
                         throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_012));
                     }
                     // 获取当前储位的储位信息（盘库之前）
-                    DevPos devPosInfoBeforeInventory = devPosService.findDevPosByCabinetCode(CABINET_CODE, curLayer, curColumn);
+                    DevPos devPosInfoBeforeInventory = devPosService.findDevPosByCabinetCode(archiveCabinet.getCabinetCode(), curLayer, curColumn);
                     // 如果储位信息为空，那么就生成一个初始版的储位信息
                     if (devPosInfoBeforeInventory == null) {
-                        devPosInfoBeforeInventory = devPosService.generateDevPosInfo(CABINET_CODE, curLayer, curColumn);
+                        devPosInfoBeforeInventory = devPosService.generateDevPosInfo(archiveCabinet.getCabinetCode(), curLayer, curColumn);
                     }
                     // 生成一个初始版的储位盘库信息，盘库状态设置为盘点中
                     InventoryPos inventoryPosBeforeInventory = inventoryPosService.initInventoryPos(inventoryId, devPosInfoBeforeInventory.getId());
                     // 获取当前储位原来的档案盒信息（盘库之前）
-                    ArchiveBox archiveBoxBeforeInventory = archiveBoxService.findArchiveBoxByCabinetCodeAndPosInfo(CABINET_CODE, curLayer, curColumn);
+                    ArchiveBox archiveBoxBeforeInventory = archiveBoxService.findArchiveBoxByCabinetCodeAndPosInfo(archiveCabinet.getCabinetCode(), curLayer, curColumn);
 
                     // 直接判断储位的RFID状态，即返回信息
                     switch (this.judgeInventoryResult(results)) {
@@ -204,7 +208,7 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
                                 // 判断档案盒状态
                                 int archiveBoxStatus = archiveBoxBeforeInventory.getStatusFlag();
                                 // 如果档案盒是已借出状态，那么盘点正常。
-                                if (archiveBoxStatus == ARCHIVE_BOX_STATUS_IN_CABINET) {
+                                if (archiveBoxStatus == ARCHIVE_BOX_STATUS_BORROWED) {
                                     // 更新储位状态，无需更新档案盒状态，设置为正常状态
                                     DevPos devPosAfterInventory = devPosService.updateDevPosAfterInventory(devPosInfoBeforeInventory, archiveBoxBeforeInventory, DEV_POS_STATUS_NORMAL);
                                     // 更新该储位的盘库信息，盘库状态为盘库成功
@@ -214,7 +218,21 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
                                             INVENTORY_STATUS_POS_SUCCESS,
                                             INVENTORY_POS_STATUS_IS_EMPTY);
                                 }
-                                // 如果档案盒是在库状态
+                                // 如果档案盒的状态是已移交状态，那么也是盘点正常，此时空位数量 + 1
+                                else if (archiveBoxStatus == ARCHIVE_BOX_STATUS_REMOVED) {
+                                    // 空位数 + 1
+                                    vacancyNum ++;
+                                    // 更新储位状态，无需更新档案盒状态，设置为正常状态
+                                    DevPos devPosAfterInventory = devPosService.updateDevPosAfterInventory(devPosInfoBeforeInventory, archiveBoxBeforeInventory, DEV_POS_STATUS_NORMAL);
+                                    // 更新该储位的盘库信息，盘库状态为盘库成功
+                                    inventoryPosService.updateInventoryPos(archiveBoxBeforeInventory,
+                                            devPosAfterInventory,
+                                            inventoryPosBeforeInventory,
+                                            INVENTORY_STATUS_POS_SUCCESS,
+                                            INVENTORY_POS_STATUS_IS_EMPTY);
+                                }
+                                // 如果档案盒是在库状态证明档案盒的记录是错误的
+
                             }
                             break;
                         }
@@ -255,6 +273,11 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
                 } while (curLayer != targetLayer);
                 count ++;
             }
+            // 所有层盘库完毕
+            int endLayer = startLayer - 1 == 0? totalLayers : curLayer;
+            // 更新层的盘库信息
+            inventoryLayerService.updateInventoryLayerInfo(vacancyNum, endLayer, INVENTORY_STATUS_LAYER_FINISHED, inventoryLayer);
+            // 生词本次盘库的总盘库信息
 
         }
 

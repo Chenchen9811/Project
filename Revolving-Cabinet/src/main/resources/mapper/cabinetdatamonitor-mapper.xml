@@ -1,0 +1,28 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.revolvingcabinet.dao.CabinetDataMonitorMapper">
+
+    <sql id="selectField">
+        id,
+        temperature,
+humidity,
+plc_signal,
+rfid_signal,
+lightCurtain_status,
+create_time
+    </sql>
+
+    <insert id="insertMonitorData" parameterType="com.project.revolvingcabinet.entity.CabinetDataMonitor">
+        insert into cabinet_data_monitor
+        (<include refid="selectField"></include>)
+        values (#{id}, #{temperature}, #{humidity}, #{plcSignal}, #{rfidSignal}, #{lightCurtainStatus}, #{createTime})
+    </insert>
+
+    <select id="getLatestMonitorData" resultType="com.project.revolvingcabinet.entity.CabinetDataMonitor">
+        select <include refid="selectField"></include>
+        from cabinet_data_monitor
+        order by create_time desc
+        limit 1
+    </select>
+</mapper>

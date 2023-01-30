@@ -9,8 +9,14 @@ import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.ip.IpParameters;
 import com.serotonin.modbus4j.locator.BaseLocator;
 import com.serotonin.modbus4j.msg.*;
+import gnu.io.CommPortIdentifier;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 public class ModbusUtils {
     private static Logger log = LoggerFactory.getLogger(ModbusUtils.class);
@@ -18,6 +24,12 @@ public class ModbusUtils {
      * 工厂。
      */
     static ModbusFactory modbusFactory;
+
+    private CommPortIdentifier portId;
+
+    private static Enumeration<CommPortIdentifier> portList;
+
+    String portName;
 
     static {
         if (modbusFactory == null) {
@@ -334,6 +346,19 @@ public class ModbusUtils {
             return response.getShortData();
         }
         return null;
+    }
+
+    /**
+     * 获取可用端口的端口号
+     * @return
+     */
+    public static String getAvailablePortName() {
+        List<String> systemPorts = new ArrayList<>();
+        portList = CommPortIdentifier.getPortIdentifiers();
+        while (portList.hasMoreElements()) {
+            systemPorts.add(portList.nextElement().getName());
+        }
+        return systemPorts.get(0);
     }
 
 

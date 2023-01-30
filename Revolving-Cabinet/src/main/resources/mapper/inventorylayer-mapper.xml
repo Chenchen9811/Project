@@ -2,6 +2,22 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.project.revolvingcabinet.dao.InventoryLayerMapper">
+    <insert id="initInventoryLayerInfo" parameterType="com.project.revolvingcabinet.entity.InventoryLayer">
+        insert into inventory_layer
+            (id, inventory_id, start_layer_no, status_flag, create_time, create_user)
+        values
+            (#{id}, #{inventoryId}, #{startLayerNo}, #{statusFlag}, #{createTime}, #{createUser})
+    </insert>
 
-
+    <update id="updateInventoryLayerInfo" parameterType="com.project.revolvingcabinet.entity.InventoryLayer">
+        update inventory_layer
+        set
+            end_layer_no = #{endLayerNo},
+            vacancyNum = #{vacancyNum},
+            status_flag = #{statusFlag},
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        where
+            id = #{id}
+    </update>
 </mapper>

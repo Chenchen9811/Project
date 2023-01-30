@@ -128,6 +128,14 @@ public class Messages {
     public static final String MSG_S_LOG_010 = "MSG-S-LOG-010";
     /**MSG-S-LOG-011：用户创建成功！*/
     public static final String MSG_S_LOG_011 = "MSG-S-LOG-011";
+    /**MSG-S-LOG-012：开门成功！*/
+    public static final String MSG_S_LOG_012 = "MSG-S-LOG-012";
+    /**MSG-S-LOG-013：关门成功！*/
+    public static final String MSG_S_LOG_013 = "MSG-S-LOG-013";
+    /**MSG-S-LOG-014：移层成功！*/
+    public static final String MSG_S_LOG_014 = "MSG-S-LOG-014";
+    /**MSG-S-LOG-014：发送停止指令成功！*/
+    public static final String MSG_S_LOG_015 = "MSG-S-LOG-015";
 
     /************************ 各页面出现异常时的提示信息 *********************/
     /**logincontroller：表单无数据！*/
