@@ -5,3 +5,5 @@ https://blog.csdn.net/M17854278376/article/details/127441888?spm=1001.2014.3001.
 ## Modbus使用的库和资源在下面连接中
 链接：https://pan.baidu.com/s/14zgmnugqRrPX6ZCsqxbBDw 
 提取码：exu9
+
+使用参考：https://blog.csdn.net/zhangFG77/article/details/126423708?spm=1001.2014.3001.5506
