@@ -10,7 +10,18 @@ public class CabinetDataMonitor {
     private Integer plcSignal;
     private Integer rfidSignal;
     private Integer lightCurtainStatus;
+    private String upperComputerNetworkState; // 上位机通讯信号
+    private String cabinetId; // 档案柜外键
+    private String cabinetCode; // 档案柜编号
     private Timestamp createTime;
+
+    public String getUpperComputerNetworkState() {
+        return upperComputerNetworkState;
+    }
+
+    public void setUpperComputerNetworkState(String upperComputerNetworkState) {
+        this.upperComputerNetworkState = upperComputerNetworkState;
+    }
 
     @Override
     public String toString() {
@@ -21,8 +32,27 @@ public class CabinetDataMonitor {
                 ", plcSignal=" + plcSignal +
                 ", rfidSignal=" + rfidSignal +
                 ", lightCurtainStatus=" + lightCurtainStatus +
+                ", upperComputerNetworkState='" + upperComputerNetworkState + '\'' +
+                ", cabinetId='" + cabinetId + '\'' +
+                ", cabinetCode='" + cabinetCode + '\'' +
                 ", createTime=" + createTime +
                 '}';
+    }
+
+    public String getCabinetId() {
+        return cabinetId;
+    }
+
+    public void setCabinetId(String cabinetId) {
+        this.cabinetId = cabinetId;
+    }
+
+    public String getCabinetCode() {
+        return cabinetCode;
+    }
+
+    public void setCabinetCode(String cabinetCode) {
+        this.cabinetCode = cabinetCode;
     }
 
     public Long getId() {

@@ -1,8 +1,11 @@
 package com.project.revolvingcabinet.service;
 
 
+import com.project.revolvingcabinet.Vo.ArchiveBoxVo;
 import com.project.revolvingcabinet.entity.ArchiveBox;
 import com.project.revolvingcabinet.entity.DevPos;
+
+import java.util.List;
 
 public interface ArchiveBoxService {
 
@@ -34,4 +37,12 @@ public interface ArchiveBoxService {
      * @param boxLocation
      */
     ArchiveBox updateArchiveBoxAfterInventory(int archiveBoxStatusAfterInventory, Long archiveBoxId, int layer, int column, String boxLocation);
+
+
+    /**
+     * 根据keyword查找档案盒
+     * @param keyword
+     * @return
+     */
+    List<ArchiveBoxVo> getArchiveBoxByKeyWord(String keyword);
 }

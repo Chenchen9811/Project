@@ -36,6 +36,24 @@
 
     <select id="selectPosIdByBoxLocationAndCabinetCode" resultType="com.project.revolvingcabinet.entity.DevPos">
         select
+        <include refid="selectFields">
+        </include>
+        from archive_box
+        where cabinet_id = #{cabinetId}
+        and layer_no = #{layer}
+        and column_no = #{column}
+    </select>
 
+    <select id="selectArchiveBoxByKeyWord" resultType="com.project.revolvingcabinet.entity.ArchiveBox">
+        select
+        <include refid="selectFields">
+        </include>
+        from archive_box
+        where
+            box_name like concat('%', #{keyword}, '%')
+        or
+            box_no like concat('%', #{keyword}, '%')
+        or
+            box_location = #{keyword}
     </select>
 </mapper>

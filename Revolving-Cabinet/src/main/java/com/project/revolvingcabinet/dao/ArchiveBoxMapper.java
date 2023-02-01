@@ -4,6 +4,8 @@ import com.project.revolvingcabinet.entity.ArchiveBox;
 import com.project.revolvingcabinet.entity.DevPos;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 @Mapper
 public interface ArchiveBoxMapper {
 
@@ -36,4 +38,12 @@ public interface ArchiveBoxMapper {
      * @param boxLocation
      */
      int updateArchiveBoxAfterInventory(int archiveBoxStatusAfterInventory, Long archiveBoxId, int layer, int column, String boxLocation);
+
+
+    /**
+     * 根据KeyWord查找档案盒
+     * @param keyword
+     * @return
+     */
+    List<ArchiveBox> selectArchiveBoxByKeyWord(String keyword);
 }

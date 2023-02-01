@@ -4,6 +4,7 @@ import com.project.revolvingcabinet.common.CommonResult;
 import com.project.revolvingcabinet.common.Messages;
 import com.project.revolvingcabinet.controller.UserController;
 import com.project.revolvingcabinet.dao.DevPosMapper;
+import com.project.revolvingcabinet.dao.InventoryMapper;
 import com.project.revolvingcabinet.entity.*;
 import com.project.revolvingcabinet.modbus.ModBusConstants;
 import com.project.revolvingcabinet.modbus.ModbusUtils;
@@ -50,69 +51,91 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
     @Resource
     private InventoryLayerService inventoryLayerService;
 
+    @Resource
+    private InventoryMapper inventoryMapper;
 
 
 
     @Override
     public CommonResult inventory() throws ModbusTransportException{
         // 连接串口
-        ModbusMaster com1 = ModbusUtils.getSerialPortRtuMaster("COM1", 115200, 8, 1, 0);
+        ModbusMaster com1 = ModbusUtils.getSerialPortRtuMaster(ModbusUtils.getAvailablePortName(), 115200, 8, 1, 0);
         // 获取当前层、最大RFID数量、总层数
         int curLayer = Integer.MIN_VALUE, maxRfidNums = Integer.MIN_VALUE, totalLayers = Integer.MIN_VALUE;
         try {
             curLayer = ModbusUtils.readSingleHoldingRegisterValue03(com1, SLAVE_ID, ADDRESS_OFFSET_CUR_LAYER);
         } catch (ModbusTransportException e) {
+            logger.error(Messages.MSG_E_LOG_010);
             throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_010));
         }
         try {
             maxRfidNums = ModbusUtils.readSingleHoldingRegisterValue03(com1, SLAVE_ID, ADDRESS_OFFSET_MAX_RFID);
         } catch (ModbusTransportException e) {
+            logger.error(Messages.MSG_E_LOG_011);
             throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_011));
         }
         try {
             totalLayers = ModbusUtils.readSingleHoldingRegisterValue03(com1, SLAVE_ID, ADDRESS_OFFSET_TOTAL_LAYER);
         } catch (ModbusTransportException e) {
+            logger.error(Messages.MSG_E_LOG_012);
             throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_012));
         }
-        // 生成此次盘库信息的id
-        Long inventoryId = CommonUtil.generateId();
-        // 获取档案柜信息
-        ArchiveCabinet archiveCabinet = archiveCabinetService.getArchiveCabinet();
+
 
         // 获取当前层和最大RFID数量成功
         if (curLayer != Integer.MIN_VALUE && maxRfidNums != Integer.MIN_VALUE && totalLayers != Integer.MIN_VALUE) {
-            // 开始盘点
-            ModbusUtils.writeOutputState05(com1, SLAVE_ID, ADDRESS_OFFSET_START_INVENTORY, true);
-
-            // 读取盘点开始盘点信号，读到信号为true时才往下开始盘点
-            boolean inventoryStartSignal = false;
-            do {
-
-                inventoryStartSignal = ModbusUtils.readOutputState01(com1, SLAVE_ID, ADDRESS_OFFSET_START_INVENTORY);
-            } while (inventoryStartSignal);
+            // 获取档案柜信息
+            ArchiveCabinet archiveCabinet = archiveCabinetService.getArchiveCabinet();
+            // RFID开始地址
             int address = ADDRESS_OFFSET_READ_RFID_START;
             int count = 0;
 
-            // 暂停线程500ms
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            // 初始化空位数
+            int vacancyNum = 0;
+            // 盘库开始时间
+            Timestamp inventoryStartTime = new Timestamp(System.currentTimeMillis());
+            // 开始储位
+            Integer storageNoStart = curLayer * 10 + 1; // curLayer * 10 + 1
+            // 盘点类型
+            int inventoryType = INVENTORY_TYPE_STOCK; // 库存盘点
+            // 盘点方法
+            int inventoryMethod = INVENTORY_METHOD_SINGLE; // 单本盘点
+            // 初始化总盘库信息
+            Inventory inventoryBefore = this.initInventoryInfo(storageNoStart, inventoryType, inventoryMethod, INVENTORY_STATUS_NOT_CHECK);
 
+            Long inventoryId = inventoryBefore.getInventoryId();
             // 初始化本次盘库的层盘点信息
             int startLayer = curLayer;
             InventoryLayer inventoryLayer = inventoryLayerService.initInventoryLayerInfo(inventoryId, startLayer, INVENTORY_STATUS_LAYER_NOT_INVENTORY);
-            // 初始化空位数
-            int vacancyNum = 0;
             while (count < totalLayers) {
+                // 开始盘点
+                ModbusUtils.writeOutputState05(com1, SLAVE_ID, ADDRESS_OFFSET_START_INVENTORY, true);
+                // 读取盘点开始盘点信号，读到信号为true时才往下开始盘点
+                boolean inventoryStartSignal = false;
+                do {
+                    try {
+                        inventoryStartSignal = ModbusUtils.readOutputState01(com1, SLAVE_ID, ADDRESS_OFFSET_START_INVENTORY);
+                    } catch (ModbusTransportException e) {
+                        logger.error(Messages.MSG_E_LOG_029);
+                        throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_029));
+                    }
+                } while (!inventoryStartSignal);
+                // 暂停线程500ms等待硬件执行盘库
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                // 重置地址
+                address = ADDRESS_OFFSET_READ_RFID_START;
                 // 盘点当前层
                 for (int curColumn = 1; curColumn <= maxRfidNums; curColumn ++) {
                     // 获取当前列的RFID信息
-                    short[] results = new short[0];
+                    short[] results = new short[2];
                     try {
                         results = ModbusUtils.readMultiInputRegistersValue04(com1, SLAVE_ID, address, 2);
                     } catch (ModbusTransportException e) {
+                        logger.error(Messages.MSG_E_LOG_012);
                         throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_012));
                     }
                     // 获取当前储位的储位信息（盘库之前）
@@ -249,12 +272,14 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
                 try {
                     ModbusUtils.writeSingleRegister06(com1, SLAVE_ID, ADDRESS_OFFSET_TARGET_LAYER, targetLayer);
                 } catch (ModbusTransportException e) {
+                    logger.error(Messages.MSG_E_LOG_013);
                     throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_013));
                 }
                 // 移层
                 try {
                     ModbusUtils.writeOutputState05(com1, SLAVE_ID, ADDRESS_OFFSET_MOVE_LAYER, true);
                 } catch (ModbusTransportException e) {
+                    logger.error(Messages.MSG_E_LOG_014);
                     throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_014));
                 }
                 // 暂停当前线程，等待移层
@@ -268,6 +293,7 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
                     try {
                         curLayer = ModbusUtils.readSingleHoldingRegisterValue03(com1, SLAVE_ID, ADDRESS_OFFSET_CUR_LAYER);
                     } catch (ModbusTransportException e) {
+                        logger.error(Messages.MSG_E_LOG_016);
                         throw new ModbusTransportException(Messages.getErrorMsg(Messages.MSG_E_LOG_016));
                     }
                 } while (curLayer != targetLayer);
@@ -277,12 +303,22 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
             int endLayer = startLayer - 1 == 0? totalLayers : curLayer;
             // 更新层的盘库信息
             inventoryLayerService.updateInventoryLayerInfo(vacancyNum, endLayer, INVENTORY_STATUS_LAYER_FINISHED, inventoryLayer);
-            // 生词本次盘库的总盘库信息
-
+            // 更新本次盘库的总盘库信息
+            Timestamp inventoryEndTime = new Timestamp(System.currentTimeMillis());
+            // 结束储位
+            int storageNoEnd = endLayer * 100 + maxRfidNums;
+            // 盘库状态：已盘点
+            this.updateInventoryInfo(storageNoEnd, INVENTORY_STATUS_ALL, inventoryBefore);
+        } else {
+            // 获取最大RFID和当前层失败
         }
+
 
         return null;
     }
+
+
+
 
     /**
      * 判断储位返回值
@@ -302,5 +338,50 @@ public class InventoryServiceImpl implements InventoryService, ModBusConstants, 
         } else if (results[0] == 0 && results[1] == 0) {
             return INVENTORY_POS_STATUS_IS_EMPTY;
         } else return INVENTORY_POS_STATUS_NORMAL;
+    }
+
+    /**
+     * 初始化总盘库信息
+     * @param storageNoStart
+     * @param inventoryType
+     * @param inventoryMethod
+     * @param statusFlag
+     * @return
+     */
+    @Override
+    public Inventory initInventoryInfo(Integer storageNoStart, int inventoryType, int inventoryMethod, int statusFlag) {
+        ArchiveCabinet archiveCabinet = archiveCabinetService.getArchiveCabinet();
+        Inventory inventory = new Inventory();
+        inventory.setInventoryId(CommonUtil.generateId());
+        inventory.setStorageNoStart(storageNoStart);
+        inventory.setInventoryType(inventoryType);
+        inventory.setInventoryMethods(inventoryMethod);
+        inventory.setStatusFlag(statusFlag);
+        Timestamp startTime = new Timestamp(System.currentTimeMillis());
+        inventory.setStartTime(startTime);
+        inventory.setCreateTime(startTime);
+        inventory.setCreateUser(hostHolder.getUser().getUserId());
+        inventory.setCabinetId(String.valueOf(archiveCabinet.getCabinetId()));
+        inventory.setCabinetCode(archiveCabinet.getCabinetCode());
+        return inventoryMapper.initInventoryInfo(inventory) == 1? inventory : null;
+    }
+
+
+    /**
+     * 盘库完成后更新总盘库信息
+     * @param storageNoEnd
+     * @param statusFlag
+     * @param inventory
+     * @return
+     */
+    @Override
+    public int updateInventoryInfo(int storageNoEnd, int statusFlag, Inventory inventory) {
+        inventory.setStorageNoEnd(storageNoEnd);
+        inventory.setStatusFlag(statusFlag);
+        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        inventory.setEndTime(endTime);
+        inventory.setUpdateTime(endTime);
+        inventory.setUpdateUser(hostHolder.getUser().getUserId());
+        return inventoryMapper.updateInventoryInfo(inventory);
     }
 }

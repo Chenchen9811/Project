@@ -101,6 +101,41 @@ public interface RevolvingCabinetConstants {
      */
     int INVENTORY_STATUS_LAYER_FINISHED = 3;
 
+    /**
+     * 盘库类型1：入库盘点
+     */
+    int INVENTORY_TYPE_IN_STORAGE = 1;
+
+    /**
+     * 盘库类型2：库存盘点
+     */
+    int INVENTORY_TYPE_STOCK = 2;
+
+    /**
+     * 盘点方法1：单本盘点
+     */
+    int INVENTORY_METHOD_SINGLE = 1;
+
+    /**
+     * 盘点方法2：双本盘点
+     */
+    int INVENTORY_METHOD_DOUBLE = 2;
+
+    /**
+     * 盘点状态1：未盘点
+     */
+    int INVENTORY_STATUS_NOT_CHECK = 1;
+
+    /**
+     * 盘点状态2：部分盘点
+     */
+    int INVENTORY_STATUS_PART = 2;
+
+    /**
+     * 盘点状态3：已盘点
+     */
+    int INVENTORY_STATUS_ALL = 3;
+
 
     /**
      * 档案柜编号

@@ -3,5 +3,24 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.project.revolvingcabinet.dao.InventoryMapper">
 
+<insert id="initInventoryInfo" parameterType="com.project.revolvingcabinet.entity.Inventory">
+    insert into inventory
+        (inventory_id, storage_no_start, inventory_type, inventory_methods,
+         status_flag, start_time, create_time, create_user, cabinet_id, cabinet_code)
+    values
+        (#{inventoryId}, #{storageNoStart}, #{inventoryType}, #{inventoryMethods},
+           #{statusFlag}, #{startTime}, #{createTime}, #{createUser}, #{cabinetId}, #{cabinetCode})
+</insert>
 
+<update id="updateInventoryInfo" parameterType="com.project.revolvingcabinet.entity.Inventory">
+    update inventory
+    set
+        storage_no_end = #{storageNoEnd},
+        status_flag = #{statusFlag},
+        end_time = #{endTime},
+        update_time = #{updateTime},
+        update_user = #{updateUser}
+    where
+        inventory_id = #{inventoryId}
+</update>
 </mapper>

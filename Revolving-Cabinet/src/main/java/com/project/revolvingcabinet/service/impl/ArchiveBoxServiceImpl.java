@@ -1,5 +1,6 @@
 package com.project.revolvingcabinet.service.impl;
 
+import com.project.revolvingcabinet.Vo.ArchiveBoxVo;
 import com.project.revolvingcabinet.dao.ArchiveBoxMapper;
 import com.project.revolvingcabinet.entity.ArchiveBox;
 import com.project.revolvingcabinet.entity.DevPos;
@@ -8,6 +9,8 @@ import com.project.revolvingcabinet.utils.RevolvingCabinetConstants;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ArchiveBoxServiceImpl implements ArchiveBoxService, RevolvingCabinetConstants {
@@ -46,5 +49,25 @@ public class ArchiveBoxServiceImpl implements ArchiveBoxService, RevolvingCabine
         if (result == 1) {
             return archiveBoxMapper.selectArchiveBoxByCabinetCodeAndPosInfo(CABINET_CODE, layer, column);
         } else return null;
+    }
+
+    /**
+     * 根据keyword查找档案盒
+     * @param keyword
+     * @return
+     */
+    @Override
+    public List<ArchiveBoxVo> getArchiveBoxByKeyWord(String keyword) {
+        List<ArchiveBox> archiveBoxList = archiveBoxMapper.selectArchiveBoxByKeyWord(keyword);
+        List<ArchiveBoxVo> archiveBoxVoList = new ArrayList<>(archiveBoxList.size());
+        for (ArchiveBox archiveBox : archiveBoxList) {
+            ArchiveBoxVo archiveBoxVo = new ArchiveBoxVo();
+            archiveBoxVo.setBoxNo(archiveBox.getBoxNo());
+            archiveBoxVo.setBoxName(archiveBox.getBoxName());
+            archiveBoxVo.setLayerNo(archiveBox.getLayerNo());
+            archiveBoxVo.setColumnNo(archiveBox.getColumnNo());
+            archiveBoxVoList.add(archiveBoxVo);
+        }
+        return archiveBoxVoList;
     }
 }

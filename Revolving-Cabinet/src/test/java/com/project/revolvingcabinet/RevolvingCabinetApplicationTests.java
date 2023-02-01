@@ -5,6 +5,7 @@ import com.project.revolvingcabinet.dao.*;
 import com.project.revolvingcabinet.entity.*;
 import com.project.revolvingcabinet.modbus.ModbusUtils;
 
+import com.project.revolvingcabinet.service.ArchiveCabinetService;
 import com.project.revolvingcabinet.utils.CommonUtil;
 import com.project.revolvingcabinet.utils.PasswordUtil;
 import com.project.revolvingcabinet.utils.RevolvingCabinetConstants;
@@ -21,6 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
 
 
 @SpringBootTest
@@ -47,6 +49,12 @@ public class RevolvingCabinetApplicationTests implements RevolvingCabinetConstan
 
     @Resource
     private InventoryLayerMapper inventoryLayerMapper;
+
+    @Resource
+    private ArchiveCabinetService archiveCabinetService;
+
+    @Resource
+    private InventoryMapper inventoryMapper;
 
     @Test
     public void contextLoads() throws ModbusTransportException, ModbusInitException, ErrorResponseException {
@@ -124,7 +132,8 @@ public class RevolvingCabinetApplicationTests implements RevolvingCabinetConstan
     public void testArchiveBoxMapper() {
         //int i = archiveBoxMapper.updateArchiveBoxAfterInventory(ARCHIVE_BOX_STATUS_IN_CABINET, 637967629332207784L, 1, 1, 1 + "-" + 1);
         //System.out.println(i);
-
+        List<ArchiveBox> archiveBoxList = archiveBoxMapper.selectArchiveBoxByKeyWord("1-2");
+        System.out.println(archiveBoxList.get(0));
     }
 
     @Test
@@ -160,6 +169,36 @@ public class RevolvingCabinetApplicationTests implements RevolvingCabinetConstan
         inventoryLayer.setUpdateTime(new Timestamp(System.currentTimeMillis()));
         inventoryLayer.setUpdateUser(4211312L);
         System.out.println(inventoryLayerMapper.updateInventoryLayerInfo(inventoryLayer));
+    }
+
+    @Test
+    public void testInventoryMapper() {
+        ArchiveCabinet archiveCabinet = archiveCabinetService.getArchiveCabinet();
+        Inventory inventory = new Inventory();
+        inventory.setInventoryId(638107865863270000L);
+        inventory.setStorageNoStart(10);
+        inventory.setInventoryType(1);
+        inventory.setInventoryMethods(1);
+        inventory.setStatusFlag(1);
+        Timestamp startTime = new Timestamp(System.currentTimeMillis());
+        inventory.setStartTime(startTime);
+        inventory.setCreateTime(startTime);
+        inventory.setCreateUser(2222L);
+        inventory.setCabinetId(String.valueOf(archiveCabinet.getCabinetId()));
+        inventory.setCabinetCode(archiveCabinet.getCabinetCode());
+
+        inventory.setStorageNoEnd(20);
+        inventory.setStatusFlag(2);
+        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        inventory.setEndTime(endTime);
+        inventory.setUpdateTime(endTime);
+        inventory.setUpdateUser(222L);
+        System.out.println(inventoryMapper.updateInventoryInfo(inventory));
+    }
+
+    @Test
+    public void testGenerateId() {
+        System.out.println(CommonUtil.generateId());
     }
 
 }
